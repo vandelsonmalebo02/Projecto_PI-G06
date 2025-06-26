@@ -1,112 +1,112 @@
 #include "dstlib_include.h"
 
 
-// ------------------ Funções auxiliares ------------------
-// Verifica se um caractere é um operador aritmético válido
+// ------------------ Funcoes auxiliares ------------------
+// Verifica se um caractere e um operador aritmetico valido
 int validar_operador(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
-    // Retorna 1 (true) se caractere pertence a este operadores, senão retorna 0
+    // Retorna 1 (true) se caractere pertence a este operadores, senao retorna 0
 }
 
-// Retorna a precedência (peso) de um operador
+// Retorna a precedencia (peso) de um operador
 int receber_pesos_operador(char op) {
     switch(op) {
-        case '^': return 4; // Maior precedência: exponenciação
+        case '^': return 4; // Maior precedencia: exponenciacao
         case '*':
-        case '/': return 3; // Multiplicação e divisão têm precedência intermediária
+        case '/': return 3; // Multiplicacao e divisao tem precedência intermediaria
         case '+':
-        case '-': return 2; // Soma e subtração têm menor precedência
-        default: return 0; // Qualquer outro caractere tem peso 0 (inválido ou não operador)
+        case '-': return 2; // Soma e subtracao tem menor precedencia
+        default: return 0; // Qualquer outro caractere tem peso 0 (invalido ou nao operador)
     }
 }
 
-// Valida expressão aritmética com base na sequência de tokens
+// Valida expressao aritmetica com base na sequencia de tokens
 int validar_expressao(Token *tokens, int token_count) {
-    int parenteses = 0; // Contador de parênteses abertos
-    int esperar_operando = 1; // Indica se estamos esperando um operando (número ou '(')
+    int parenteses = 0; // Contador de parenteses abertos
+    int esperar_operando = 1; // Indica se estamos esperando um operando (numero ou '(')
 
     for (int i = 0; i < token_count; i++) {
-        Token t = tokens[i]; // Token atual da expressão
+        Token t = tokens[i]; // Token atual da expressao
 
-        // Se o token é um parêntese
+        // Se o token e um parentese
         if (t.type == PARENTESES) {
             if (t.value[0] == '(') {
-                parenteses++; // Incrementa (Abrindo um novo parêntese)
-                esperar_operando = 1; // Depois do parêntese (', espera-se um número ou outro parêntese '('
+                parenteses++; // Incrementa (Abrindo um novo parentese)
+                esperar_operando = 1; // Depois do parentese (', espera-se um numero ou outro parentese '('
             } else {
-                parenteses--; // Decrementa (Fechando um parêntese)
-                if (parenteses < 0) return -2; // erro de parêntese fechado sem um aberto
+                parenteses--; // Decrementa (Fechando um parentese)
+                if (parenteses < 0) return -2; // erro de parentese fechado sem um aberto
                 esperar_operando = 0; // Depois de fecha ')', espera-se um operador
             }
         }
-        // Se o token é um número
+        // Se o token e um numero
         else if (t.type == NUMERO) {
-            if (!esperar_operando) return -3; //erro esperado um operador mas encontrou número
-            // Verifica se há divisão por zero
+            if (!esperar_operando) return -3; //erro esperado um operador mas encontrou numero
+            // Verifica se ha divisao por zero
             if (i > 0 && tokens[i-1].type == OPERADOR &&
                 tokens[i-1].value[0] == '/' &&
-                strcmp(t.value, "0") == 0) return -4; //erro de divisão por zero
-            esperar_operando = 0; // Após um número, espera-se um operador ou ')'
+                strcmp(t.value, "0") == 0) return -4; //erro de divisao por zero
+            esperar_operando = 0; // Apos um numero, espera-se um operador ou ')'
         }
-        // Se o token é um operador
+        // Se o token e um operador
         else if (t.type == OPERADOR) {
-            if (esperar_operando) return -5; // erro número esperado, mas operador encontrado
-            esperar_operando = 1; // Depois de operador, espera-se um número ou '('
+            if (esperar_operando) return -5; // erro numero esperado, mas operador encontrado
+            esperar_operando = 1; // Depois de operador, espera-se um numero ou '('
         }
     }
 
-    // Verifica se todos os parênteses foram fechados corretamente
+    // Verifica se todos os parenteses foram fechados corretamente
     if (parenteses != 0) return -2;
-    // Verifica se a expressão termina com um operando válido
+    // Verifica se a expressao termina com um operando valido
     if (esperar_operando) return -5;
 
-    return 1; // expressão válida
+    return 1; // expressao valida
 }
 
 
-// Função que divide a expressão em tokens válidos (números, operadores e parênteses)
+// Funçao que divide a expressao em tokens validos (numeros, operadores e parenteses)
 void tokenizar(const char *express, Token *tokens, int *token_count) {
-    int i = 0; // Índice para percorrer a string da expressão
+    int i = 0; // Indice para percorrer a string da expressao
     *token_count = 0; // Inicializa a contagem de tokens com 0
 
-    // Loop até o final da string
+    // Loop ate o final da string
     while (express[i] != '\0') {
         if (isspace(express[i])) {
-            i++; // Ignora os espaços em branco
+            i++; // Ignora os espacos em branco
             continue;
         }
 
         Token token_atual = { .type = NONE, .peso = 0 }; // Cria um token vazio para preencher
 
-        // Se o caractere atual é um dígito, iniciamos a leitura de um número
+        // Se o caractere atual e um digito, iniciamos a leitura de um numero
         if (isdigit(express[i])) {
-            int j = 0; // Índice interno para montar o número
+            int j = 0; // Indice interno para montar o numero
             while (isdigit(express[i])) {
-                token_atual.value[j++] = express[i++]; // recebe os dígitos para o token
+                token_atual.value[j++] = express[i++]; // recebe os digitos para o token
             }
-            token_atual.value[j] = '\0'; // Finaliza a string do número
-            token_atual.type = NUMERO; // Marca o token como número
+            token_atual.value[j] = '\0'; // Finaliza a string do numero
+            token_atual.type = NUMERO; // Marca o token como numero
         }
-        // Se o caractere é um parêntese (abre ou fecha)
+        // Se o caractere e um parentese (abre ou fecha)
         else if (express[i] == '(' || express[i] == ')') {
-            token_atual.value[0] = express[i]; // recebe o parêntese do token
+            token_atual.value[0] = express[i]; // recebe o parentese do token
             token_atual.value[1] = '\0'; // Finaliza a string
-            token_atual.type = PARENTESES; // Marca o token como parêntese
-            i++; // Incrementa para avança para o próximo caractere
+            token_atual.type = PARENTESES; // Marca o token como parentese
+            i++; // Incrementa para avança para o proximo caractere
         }
-        // Se o caractere é um operador aritmético válido (+ - * / ^)
+        // Se o caractere e um operador aritmetico valido (+ - * / ^)
         else if (validar_operador(express[i])) {
             token_atual.value[0] = express[i];  // recebe o operador
             token_atual.value[1] = '\0'; // Finaliza a string
             token_atual.type = OPERADOR; // Marca como operador
-            token_atual.peso = receber_pesos_operador(express[i]); // Define a precedência
-            i++; // Incrementa para avança para o próximo caractere
+            token_atual.peso = receber_pesos_operador(express[i]); // Define a precedencia
+            i++; // Incrementa para avança para o proximo caractere
         }
-        // Se o caractere não é reconhecido como número, parêntese ou operador
+        // Se o caractere nao e reconhecido como numero, parentese ou operador
         else {
             printf("Erro: Caracteres invalidos.\n");
             *token_count = 0; // Zera a contagem de tokens para indicar falha
-            return; // Encerra a função imediatamente retornando vazio
+            return; // Encerra a funcao imediatamente retornando vazio
         }
 
         // Adiciona o token criado ao array de tokens e incrementa a contagem
@@ -114,35 +114,35 @@ void tokenizar(const char *express, Token *tokens, int *token_count) {
     }
 }
 
-// ------------------ Conversão Infixa -> Pós-fixa ------------------
+// ------------------ Conversao Infixa -> Pos-fixa ------------------
 
-// Converte uma expressão em notação infixa (normal) para notação pós-fixa (RPN)
-// Recebe: vetor de tokens da expressão infixa, tamanho n, vetor de saída posfixa
-// Retorna: quantidade de tokens na expressão pós-fixa gerada
+// Converte uma expressao em notacao infixa (normal) para notacao pós-fixa
+// Recebe: vetor de tokens da expressao infixa, tamanho n, vetor de saida posfixa
+// Retorna: quantidade de tokens na expressao pos-fixa gerada
 int infixa_para_posfixa(Token *infixa, int n, Token *posfixa) {
     Pilha operadores; // criacao da Pilha para armazenar os operadores temporariamente
     initPilha(&operadores); // Inicializa a pilha
-    int j = 0; // Índice de posicao da expressão pós-fixa
+    int j = 0; // Indice de posicao da expressao pos-fixa
 
-    // Percorre todos os tokens da expressão infixa
+    // Percorre todos os tokens da expressao infixa
     for (int i = 0; i < n; i++) {
         Token t = infixa[i];  // Token atual
 
-        // Se o token for um número, ele vai direto para a saída (pós-fixa)
+        // Se o token for um numero, ele vai direto para a saida (pos-fixa)
         if (t.type == NUMERO) {
             posfixa[j++] = t;
         }
-        // Se o token for um parêntese
+        // Se o token for um parentese
         else if (t.type == PARENTESES) {
             if (t.value[0] == '(') {
-                push(&operadores, t);  // Abre parêntese → empilha
+                push(&operadores, t);  // Abre parentese → empilha
             } else {
-                // Fecha parêntese → desempilha operadores até encontrar o '('
+                // Fecha parentese → desempilha operadores ate encontrar o '('
                 while (!vaziaPilha(&operadores) && top(&operadores).value[0] != '(') {
                     posfixa[j++] = top(&operadores);
                     pop(&operadores);
                 }
-                pop(&operadores); // Remove o parêntese de abertura '('
+                pop(&operadores); // Remove o parentese de abertura '('
             }
         }
         // Se for um operador
@@ -150,8 +150,8 @@ int infixa_para_posfixa(Token *infixa, int n, Token *posfixa) {
             // Enquanto houver operadores na pilha com precedência maior ou igual como em '^'
             while (!vaziaPilha(&operadores) &&
                    top(&operadores).type == OPERADOR &&
-                   ((t.peso <= top(&operadores).peso && t.value[0] != '^') ||  // Associativo à esquerda
-                    (t.peso < top(&operadores).peso))) { // Associativo à direita
+                   ((t.peso <= top(&operadores).peso && t.value[0] != '^') ||  // Associativo a esquerda
+                    (t.peso < top(&operadores).peso))) { // Associativo a direita
                 posfixa[j++] = top(&operadores); 
                 pop(&operadores);
             }
@@ -166,18 +166,18 @@ int infixa_para_posfixa(Token *infixa, int n, Token *posfixa) {
         pop(&operadores);
     }
 
-    // Retorna o número de tokens pós-fixa
+    // Retorna o numero de tokens pos-fixa
     return j;
 }
 
-// ------------------ Avaliação Pós-fixa ------------------
+// ------------------ Avaliacao Pos-fixa ------------------
 // Aplica um operador binário (como +, -, *, /, ^) a dois operandos a e b
 int aplicar_operador(int a, int b, char op) {
     switch (op) {
         case '+': return a + b; // Soma
-        case '-': return a - b; // Subtração
-        case '*': return a * b; // Multiplicação
-        case '/': return b == 0 ? 0 : a / b; // Divisão com verificação de zero
+        case '-': return a - b; // Subtracao
+        case '*': return a * b; // Multiplicacao
+        case '/': return b == 0 ? 0 : a / b; // Divisao com verificacao de zero
         case '^': {  // Exponenciação: a elevado a b
             int r = 1;
             for (int i = 0; i < b; i++) r *= a;
@@ -187,29 +187,29 @@ int aplicar_operador(int a, int b, char op) {
     }
 }
 
-// Avalia uma expressão em notação pós-fixa e armazena o resultado em 'resultado_final'
-// Retorna: 1 se for sucesso, 0 se der erro de pilha, -1 se for uma divisão por zero
+// Avalia uma expressao em notacao pos-fixa e armazena o resultado em 'resultado_final'
+// Retorna: 1 se for sucesso, 0 se der erro de pilha, -1 se for uma divisao por zero
 int avaliar_posfixa(Token *posfixa, int n, int *resultado_final) {
     Pilha operandos;
     initPilha(&operandos); // Inicializa pilha de operandos
 
-    // Percorre todos os tokens da expressão pós-fixa
+    // Percorre todos os tokens da expressao pos-fixa
     for (int i = 0; i < n; i++) {
         Token t = posfixa[i];
-        // Se o token for um número, empilha diretamente
+        // Se o token for um numero, empilha diretamente
         if (t.type == NUMERO) {
             push(&operandos, t);
         } 
         // Se o token for um operador, desempilha dois operandos e aplica o operador
         else if (t.type == OPERADOR) {
             if (vaziaPilha(&operandos)) return 0; // erro operandos insuficientes
-            int b = atoi(top(&operandos).value); pop(&operandos); // Último valor empilhado, operando 2
+            int b = atoi(top(&operandos).value); pop(&operandos); // Ultimo valor empilhado, operando 2
 
             if (vaziaPilha(&operandos)) return 0; // erro operandos insuficientes
             int a = atoi(top(&operandos).value); pop(&operandos); // Valor anterior, operando 1
 
             if (t.value[0] == '/' && b == 0) {
-                return -1; // erro divisão por zero
+                return -1; // erro divisao por zero
             }
 
             int resultado = aplicar_operador(a, b, t.value[0]); // Aplica o operador nos operandos
@@ -234,12 +234,12 @@ int avaliar_posfixa(Token *posfixa, int n, int *resultado_final) {
 }
 
 
-// ------------------ Função principal ------------------
+// ------------------ Funcao principal ------------------
 
 int main(int argc, char *argv[]) {
     char txt_str[MAX]; // variavel para armazenar cada linha lida do arquivo
 
-    // Verifica se os argumentos da linha de comando são válidos
+    // Verifica se os argumentos da linha de comando sao validos
     if (argc >= 3 && strcmp(argv[1], "in.txt") == 0 && strcmp(argv[2], "out.txt") == 0) {
         FILE *arq_in = fopen(argv[1], "r"); // Abre o arquivo de entrada para leirura
         FILE *arq_out = fopen(argv[2], "w"); // Abre (ou cria) o arquivo de saída para escrita
@@ -249,12 +249,12 @@ int main(int argc, char *argv[]) {
             printf("\n LEITURA DOS DADOS NO ARQUIVO DE ENTRADA: in.txt \n");
             printf("-------------------------------------------------\n");
 
-            // Primeira leitura apenas para mostrar as expressões do arquivo na tela
+            // Primeira leitura apenas para mostrar as expressoaaaes do arquivo na tela
             while (fgets(txt_str, MAX, arq_in) != NULL) {
                 printf("%s", txt_str);
             }
 
-            rewind(arq_in); // Retorna o ponteiro para o início do arquivo para processar de fato
+            rewind(arq_in); // Retorna o ponteiro para o inicio do arquivo para processar de fato
 
             printf("\n          VALIDAR EXPRESSOES E CALCULAR \n");
             printf("-------------------------------------------------\n");
@@ -264,36 +264,36 @@ int main(int argc, char *argv[]) {
             while (fgets(txt_str, MAX, arq_in) != NULL) {
                 printf("Expressao: %s", txt_str);
 
-                // Lê próxima linha só para saber se ainda há mais (mas neste trecho não é usada)
+                // Lê próxima linha so para saber se ainda ha mais (mas neste trecho nao e usada)
                 char next_line[MAX];
                 char *next = fgets(next_line, MAX, arq_in);
                 
-                // Se não conseguiu ler próxima linha, esta é a última
+                // Se nao conseguiu ler proxima linha, esta e a ultima
                 if (next == NULL) {
-                    // Caso seja a última linha, imprime quebra de linha
+                    // Caso seja a ultima linha, imprime quebra de linha
                     printf("\n");
                 }
                 
-                // Remove caractere de nova linha '\n' no final da expressão
+                // Remove caractere de nova linha '\n' no final da expressao
                 txt_str[strcspn(txt_str, "\n")] = '\0';
 
                 Token tokens[100]; // Vetor para armazenar tokens
                 int token_count = 0;
 
-                // chamada da função Tokeniza a expressão
+                // chamada da funcao Tokeniza a expressao
                 tokenizar(txt_str, tokens, &token_count);
 
-                // Verifica se não foi possível tokenizar (caractere inválido)
+                // Verifica se nao foi possivel tokenizar (caractere inválido)
                 if (token_count == 0) {
                     fprintf(arq_out, "%s = Erro: Caractere inválido\n", txt_str);
                     printf("-------------------------------------------------\n");
                     continue;
                 }
 
-                //chamada da função de Valida a estrutura da expressão
+                //chamada da funçao de Valida a estrutura da expressao
                 int validacao = validar_expressao(tokens, token_count);
 
-                //verifica se expressão for válida
+                //verifica se expressão for valida
                 if (validacao == 1) {
                     printf("Expressao valida!\n");
                     Token posfixa[100];
@@ -301,19 +301,19 @@ int main(int argc, char *argv[]) {
                     int resultado;
                     int status = avaliar_posfixa(posfixa, posfixa_count, &resultado);
                     if (status == -1) {
-                        // erro de divisão por zero detectada durante avaliação
+                        // erro de divisao por zero detectada durante avaliacao
                         fprintf(arq_out, "%s = Erro: Divisão por zero\n", txt_str);
                         printf("Erro: Divisao por zero\n");
                     } else if (status == 1) {
-                        // Avaliação bem-sucedida
+                        // Avaliacao bem-sucedida
                         fprintf(arq_out, "%s = %d\n", txt_str, resultado);
                         printf("Resultado: %d\n", resultado);
                     } else {
-                        // erro inesperado na avaliação
+                        // erro inesperado na avaliacao
                         printf("Erro: Avaliação falhou\n");
                     }
                 } else {
-                    // Se a expressão foi malformada ou inválida — trata com base no código de erro
+                    // Se a expressao foi malformada ou invalida — trata com base no codigo de erro
                     switch (validacao) {
                         case -2:
                             fprintf(arq_out, "%s = Erro: Parênteses desbalanceados\n", txt_str);
@@ -342,12 +342,12 @@ int main(int argc, char *argv[]) {
             fclose(arq_in);
             fclose(arq_out);
         } else {
-            // Caso não consiga abrir o arquivo de entrada
+            // Caso nao consiga abrir o arquivo de entrada
             printf("Arquivo %s nao existe\n", argv[1]);
             return 1;
         }
     } else {
-        // erro de Argumentos inválidos passados na linha de comando
+        // erro de Argumentos invalidos passados na linha de comando
         printf("Foi passado argumentos que nao fazem parte da regra.\n");
         printf("Regra: ./avaliador in.txt out.txt\n");
         return 1;
